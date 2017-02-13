@@ -109,9 +109,6 @@ public class PushService {
 		if (StringUtils.isEmpty(msg.getType())) {
 			throw new BusinessException("msg.type.empty");
 		}
-		if (!PushConst.TYPE_SINGLE.equals(msg.getType())) {
-			throw new BusinessException("msg.type.error");
-		}
 		if (StringUtils.isEmpty(msg.getTitle())) {
 			throw new BusinessException("msg.title.empty");
 		}

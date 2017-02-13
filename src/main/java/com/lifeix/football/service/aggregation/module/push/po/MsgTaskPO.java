@@ -5,7 +5,7 @@ import java.util.Date;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "tasks")
+@Document(collection = "push_tasks")
 public class MsgTaskPO {
 
 	public static final String STATUS_PENDING = "pending";

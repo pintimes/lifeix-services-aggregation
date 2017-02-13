@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "msgs")
+@Document(collection = "push_tasks")
 public class MsgPO {
 
 	/**
