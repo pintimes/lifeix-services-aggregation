@@ -3,7 +3,7 @@ package com.lifeix.football.service.aggregation.module.push.model;
 import java.util.Date;
 import java.util.Map;
 
-public class Msg {
+public class UmengMsg {
 
 	private String id;
 	private String type;
@@ -16,8 +16,6 @@ public class Msg {
 	private Date start_time; 
 	private Date createTime;
 	
-	
-
 	public String getTitle() {
 		return title;
 	}

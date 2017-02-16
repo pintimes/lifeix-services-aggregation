@@ -11,6 +11,7 @@ public class PushConst {
 	/**
 	 * 设备类型
 	 */
+	public static final String PLATFORM_ALL = "all";
 	public static final String PLATFORM_IOS = "ios";
 	public static final String PLATFORM_ANDROID = "android";
 

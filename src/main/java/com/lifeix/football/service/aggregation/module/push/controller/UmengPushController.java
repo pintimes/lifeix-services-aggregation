@@ -6,22 +6,30 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lifeix.football.service.aggregation.module.push.model.Msg;
-import com.lifeix.football.service.aggregation.module.push.service.PushService;
+import com.lifeix.football.common.exception.BusinessException;
+import com.lifeix.football.common.util.AdapterUtil;
+import com.lifeix.football.service.aggregation.module.push.model.GetuiMsg;
+import com.lifeix.football.service.aggregation.module.push.model.UmengMsg;
+import com.lifeix.football.service.aggregation.module.push.service.GetuiPushService;
+import com.lifeix.football.service.aggregation.module.push.service.UmengPushService;
 import com.lifeix.football.service.aggregation.module.push.util.PushConst;
 
 @RestController
 @RequestMapping(value = "/push")
-public class PushController {
+public class UmengPushController {
 
 	@Autowired
-	private PushService pushService;
+	private UmengPushService umengPushService;
+
+	@Autowired
+	private GetuiPushService getuiPushService;
 
 	/**
 	 * 发布广播，推送给IOS和Android
@@ -38,8 +46,13 @@ public class PushController {
 			@RequestParam(value = "description", required = true) String description) throws Exception {
 		String deviceToken = null;
 		String platform = null;
-		Msg msg = toMsg(PushConst.TYPE_BOARDCAST, platform, deviceToken, title, text, custom, description,null);
-		pushService.push(msg);
+		UmengMsg msg = toMsg(PushConst.TYPE_BOARDCAST, platform, deviceToken, title, text, custom, description, null);
+		umengPushService.push(msg);
+		/**
+		 * 如果是广播同时推送给个推
+		 */
+		GetuiMsg getuiMsg = toGetuiMsg(msg);
+		getuiPushService.push(getuiMsg);
 	}
 
 	/**
@@ -58,8 +71,8 @@ public class PushController {
 			@RequestParam(value = "description", required = true) String description) throws Exception {
 		String platform = null;
 		Long start_time = null;
-		Msg msg = toMsg(PushConst.TYPE_LISTCAST, platform, deviceToken, title, text, custom, description,start_time);
-		pushService.push(msg);
+		UmengMsg msg = toMsg(PushConst.TYPE_LISTCAST, platform, deviceToken, title, text, custom, description, start_time);
+		umengPushService.push(msg);
 	}
 
 	/**
@@ -72,24 +85,39 @@ public class PushController {
 	@RequestMapping(value = "/single", method = RequestMethod.POST)
 	public void pushSingle(//
 			@RequestParam(value = "platform", required = true) String platform, // platform
-			@RequestParam(value = "deviceToken", required = true) String deviceToken, //
+			@RequestParam(value = "deviceToken", required = false) String deviceToken, //
+			@RequestParam(value = "clientId", required = false) String clientId, //
 			@RequestParam(value = "title", required = true) String title, //
 			@RequestParam(value = "text", required = true) String text, //
 			@RequestParam(value = "custom", required = true) String custom, //
 			@RequestParam(value = "description", required = true) String description) throws Exception {
 		Long start_time = null;
-		Msg msg = toMsg(PushConst.TYPE_SINGLE, platform, deviceToken, title, text, custom, description,start_time);
-		pushService.push(msg);
+		UmengMsg msg = toMsg(PushConst.TYPE_SINGLE, platform, deviceToken, title, text, custom, description, start_time);
+		if (!StringUtils.isEmpty(deviceToken)) {
+			umengPushService.push(msg);
+		}
+		if (!StringUtils.isEmpty(clientId)) {
+			GetuiMsg getuiMsg = toGetuiMsg(msg);
+			getuiMsg.setClientId(clientId);
+			getuiPushService.push(getuiMsg);
+		}
+	}
+	
+	private GetuiMsg toGetuiMsg(UmengMsg msg){
+		GetuiMsg getuiMsg = AdapterUtil.toT(msg, GetuiMsg.class);
+		getuiMsg.setContent(msg.getCustom());
+		getuiMsg.setDevice(msg.getPlatform());
+		return getuiMsg;
 	}
 
-	private Msg toMsg(String type, String platform, String deviceToken, String title, String text, String custom, String description, Long startTime) {
+	private UmengMsg toMsg(String type, String platform, String deviceToken, String title, String text, String custom, String description, Long startTime) {
 		JSONObject json = JSONObject.parseObject(custom);
 		Set<String> keySet = json.keySet();
 		Map<String, String> map = new HashMap<>();
 		for (String key : keySet) {
 			map.put(key, json.getString(key));
 		}
-		Msg msg = new Msg();
+		UmengMsg msg = new UmengMsg();
 		msg.setType(type);
 		msg.setTitle(title);
 		msg.setText(text);

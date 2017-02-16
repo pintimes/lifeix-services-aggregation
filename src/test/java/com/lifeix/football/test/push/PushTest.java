@@ -15,6 +15,7 @@ import com.alibaba.fastjson.JSON;
 import com.lifeix.football.common.util.HttpUtil;
 import com.lifeix.football.common.util.JSONUtils;
 import com.lifeix.football.service.aggregation.Application;
+import com.lifeix.football.service.aggregation.module.push.dao.GetuiPushDao;
 import com.lifeix.football.service.aggregation.module.push.dao.MsgDao;
 import com.lifeix.football.service.aggregation.module.push.dao.TaskDao;
 
@@ -30,6 +31,9 @@ public class PushTest {
 	@Autowired
 	private TaskDao msgTaskDao;
 
+	@Autowired
+	private GetuiPushDao getuiPushDao;
+
 	@Test
 	// curl -X POST localhost:8080/football/push/single --data
 	// {title:\"女超收官：权健夺冠上海亚军\",text:\"女超联赛权健夺冠，上海收获亚军，苏宁女足将踢升降级附加赛，解放军14战全败降级>>\",description:\"12121\",custom:\"{hello:1}\",deviceToken=\"42ee7c3c54467e8b90fa8562fa9bde770628db9f3c32ed55093a1c6496d047a7\"}
@@ -37,29 +41,45 @@ public class PushTest {
 		try {
 			msgTaskDao.clear();
 			msgDao.clear();
+			getuiPushDao.clear();
+
 			String title = "女超收官：权健夺冠上海亚军";
 			String text = "女超联赛权健夺冠，上海收获亚军，苏宁女足将踢升降级附加赛，解放军14战全败降级>>";
-			String description = System.currentTimeMillis()+"";
 			Map<String, String> custom = openH5(title, "match", "212121", "http://s.files.c-f.com/top/images/FhTx0b79uCICFr1tTXqlkw0Egelb.jpeg",
 					"http://s.files.c-f.com/top/images/FhTx0b79uCICFr1tTXqlkw0Egelb.jpeg", "http://s.files.c-f.com/top/images/FhTx0b79uCICFr1tTXqlkw0Egelb.jpeg");
-			String deviceToken = "82f4b66510434acb6e026a8ab0c825768bb2ea64a00358ab2be78f498c84af6a";
 			System.out.println(JSON.toJSON(custom));
 
-//			push("http://54.223.127.33:8300", "single", "ios", title, text, description, custom, deviceToken);
-			push("http://localhost:8080", "single", "ios", title, text, description, custom, deviceToken);
+			// boardcast
+			String description = "测试广播" + System.currentTimeMillis();
+			push("http://localhost:8080", "boardcast", null, title, text, description, custom, null, null);
+			// pushToUmeng
+			description = "测试pushToUmeng" + System.currentTimeMillis();
+			String deviceToken = "82f4b66510434acb6e026a8ab0c825768bb2ea64a00358ab2be78f498c84af6a";
+			push("http://localhost:8080", "single", "ios", title, text, description, custom, deviceToken, null);
+			// pushToGetui ios
+			description = "测试pushToGetui ios" + System.currentTimeMillis();
+			String clientId = "b531fad5462df66b0d91e2ea91b3e3f9";
+			push("http://localhost:8080", "single", null, title, text, description, custom, null, clientId);
+			// pushToGetui android
+			description = "测试pushToGetui android" + System.currentTimeMillis();
+			clientId = "8de881563d10fae47e7ce0449547b7dc";
+			push("http://localhost:8080", "single", null, title, text, description, custom, null, clientId);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void push(String host, String type, String platform, String title, String text, String description, Map<String, String> custom, String deviceToken) throws Exception {
+	private void push(String host, String type, String platform, String title, String text, String description, Map<String, String> custom, String deviceToken, String clientId)
+			throws Exception {
 		Map<String, String> map = new HashMap<>();
 		map.put("title", title);
 		map.put("text", text);
 		map.put("description", description);
 		map.put("custom", JSONUtils.obj2json(custom));
-		map.put("platform", "ios");
+		map.put("platform", platform);
 		map.put("deviceToken", deviceToken);
+		map.put("clientId", clientId);
 		String sendPost = HttpUtil.sendPost(host + "/football/push/" + type, map);
 		System.out.println(sendPost);
 	}

@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties(prefix = "push")
-public class PushConfig {
+@ConfigurationProperties(prefix = "umeng")
+public class UmengConfig {
 
 	private String android_appkey;
 
