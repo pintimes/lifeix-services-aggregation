@@ -52,7 +52,7 @@ public class UmengPushService {
 	protected UmengConfig pushConfig;
 
 	public void push(UmengMsg msg) {
-		logger.info("msg = {}", msg);
+		logger.info("push to umeng");
 		/**
 		 * 校验参数是否合法有效
 		 */

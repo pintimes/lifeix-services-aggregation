@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lifeix.football.common.exception.BusinessException;
 import com.lifeix.football.common.util.AdapterUtil;
 import com.lifeix.football.service.aggregation.module.push.model.GetuiMsg;
 import com.lifeix.football.service.aggregation.module.push.model.UmengMsg;
@@ -23,7 +22,7 @@ import com.lifeix.football.service.aggregation.module.push.util.PushConst;
 
 @RestController
 @RequestMapping(value = "/push")
-public class UmengPushController {
+public class PushController {
 
 	@Autowired
 	private UmengPushService umengPushService;

@@ -52,7 +52,7 @@ public class GetuiPushService {
 	private GetuiConfig getuiConfig;
 
 	public void push(GetuiMsg msg) {
-		logger.info("msg = {}", msg);
+		logger.info("push to getui");
 		/**
 		 * 校验参数是否合法有效
 		 */
