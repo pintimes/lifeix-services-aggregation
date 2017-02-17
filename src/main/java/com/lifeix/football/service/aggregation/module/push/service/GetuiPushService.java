@@ -23,7 +23,9 @@ import com.gexin.rp.sdk.base.impl.ListMessage;
 import com.gexin.rp.sdk.base.impl.SingleMessage;
 import com.gexin.rp.sdk.base.impl.Target;
 import com.gexin.rp.sdk.base.payload.APNPayload;
+import com.gexin.rp.sdk.base.payload.APNPayload.AlertMsg;
 import com.gexin.rp.sdk.base.payload.APNPayload.DictionaryAlertMsg;
+import com.gexin.rp.sdk.exceptions.RequestException;
 import com.gexin.rp.sdk.http.IGtPush;
 import com.gexin.rp.sdk.template.TransmissionTemplate;
 import com.lifeix.football.common.exception.BusinessException;
@@ -38,6 +40,8 @@ import com.lifeix.football.service.aggregation.module.push.util.PushConst;
 
 @Service
 public class GetuiPushService {
+
+	static String host = "http://sdk.open.api.igexin.com/apiex.htm";
 
 	private Logger logger = LoggerFactory.getLogger(GetuiPushService.class);
 
@@ -80,147 +84,239 @@ public class GetuiPushService {
 		 * pushMsg
 		 */
 		IPushResult result = null;
-		if (PushConst.TYPE_BOARDCAST.equals(po.getType())) {
-			result = boardcast(po);
-		} else if (PushConst.TYPE_SINGLE.equals(po.getType())) {
-			result = single(po);
-		} else if (PushConst.TYPE_LISTCAST.equals(po.getType())) {
-			result = list(po);
+		try {
+			if (PushConst.TYPE_BOARDCAST.equals(po.getType())) {
+				result = boardcast(po);
+			} else if (PushConst.TYPE_SINGLE.equals(po.getType())) {
+				result = single(po);
+			} else if (PushConst.TYPE_LISTCAST.equals(po.getType())) {
+				result = list(po);
+			}
+		} catch (Exception e) {
+			getuiPushDao.updateStatus(msgId, GetuiPushPO.STATUS_FAIL, "异常" + e.getMessage());
+			return;
 		}
 		if (result == null) {
-			getuiPushDao.updateStatus(msgId, "fail", "网络断开或错误");
+			getuiPushDao.updateStatus(msgId, GetuiPushPO.STATUS_FAIL, "网络断开或错误");
 			return;
 		}
 		Map<String, Object> response = result.getResponse();
 		if (CollectionUtils.isEmpty(response)) {
-			getuiPushDao.updateStatus(msgId, "fail", "返回数据结果为空");
+			getuiPushDao.updateStatus(msgId, GetuiPushPO.STATUS_FAIL, "返回数据结果为空");
 			return;
 		}
 		String resultStr = (String) response.get("result");
 		if (!"ok".equals(resultStr)) {
-			getuiPushDao.updateStatus(msgId, "fail", resultStr);
+			getuiPushDao.updateStatus(msgId, GetuiPushPO.STATUS_FAIL, resultStr);
 			return;
 		}
-		getuiPushDao.updateStatus(msgId, "succ");
+		getuiPushDao.updateStatus(msgId, GetuiPushPO.STATUS_SUCC);
 	}
 
-	public IPushResult list(GetuiPushPO po) {
+	/**
+	 * 推送给多人
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日下午12:03:29
+	 *
+	 * @param po
+	 * @return
+	 * @throws IOException
+	 */
+	public IPushResult list(GetuiPushPO po) throws IOException {
 		String appKey = getuiConfig.getAppKey();
 		String appId = getuiConfig.getAppId();
 		String masterSecret = getuiConfig.getMasterSecret();
 		String clientIds = po.getClientId();
-		// 友盟版本没有clientId
-		if (StringUtils.isEmpty(clientIds)) {
-			return null;
+
+		IGtPush push = new IGtPush(appKey, masterSecret, true);
+		push.connect();
+		// 定义"AppMessage"类型消息对象，设置消息内容模板、发送的目标App列表、是否支持离线发送、以及离线消息有效期(单位毫秒)
+		ListMessage message = new ListMessage();
+		message.setData(geTemplate(appId, appKey, po));
+		// 设置消息离线，并设置离线时间
+		message.setOffline(true);
+		// 离线有效时间，单位为毫秒，可选
+		message.setOfflineExpireTime(24 * 1000 * 3600);
+		// 配置推送目标
+		String[] split = clientIds.split(",");
+		List<Target> targets = new ArrayList<>();
+		for (String clientId : split) {
+			Target target1 = new Target();
+			target1.setAppId(appId);
+			target1.setClientId(clientId);
+			targets.add(target1);
 		}
-		try {
-			IGtPush push = new IGtPush(appKey, masterSecret, true);
-			push.connect();
-			// 定义"AppMessage"类型消息对象，设置消息内容模板、发送的目标App列表、是否支持离线发送、以及离线消息有效期(单位毫秒)
-			ListMessage message = new ListMessage();
-			message.setData(geTemplate(appId, appKey, po));
-			// 设置消息离线，并设置离线时间
-			message.setOffline(true);
-			// 离线有效时间，单位为毫秒，可选
-			message.setOfflineExpireTime(24 * 1000 * 3600);
-			// 配置推送目标
-			String[] split = clientIds.split(",");
-			List<Target> targets = new ArrayList<>();
-			for (String clientId : split) {
-				Target target1 = new Target();
-				target1.setAppId(appId);
-				target1.setClientId(clientId);
-				targets.add(target1);
-			}
-			message.setData(geTemplate(appId, appKey, po));
-			message.setOffline(true);
-			message.setOfflineExpireTime(1000 * 600);
-			String taskId = push.getContentId(message);
-			IPushResult ret = push.pushMessageToList(taskId, targets);
-			return ret;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
+		message.setData(geTemplate(appId, appKey, po));
+		message.setOffline(true);
+		message.setOfflineExpireTime(1000 * 600);
+		String taskId = push.getContentId(message);
+		IPushResult ret = push.pushMessageToList(taskId, targets);
+		return ret;
 	}
 
-	public IPushResult single(GetuiPushPO po) {
+	/**
+	 * 推送给单人
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日下午12:03:39
+	 *
+	 * @param po
+	 * @return
+	 * @throws IOException
+	 */
+	public IPushResult single(GetuiPushPO po) throws IOException {
 		String appKey = getuiConfig.getAppKey();
 		String appId = getuiConfig.getAppId();
 		String masterSecret = getuiConfig.getMasterSecret();
 		String clientId = po.getClientId();
-		// 友盟版本没有clientId
-		if (StringUtils.isEmpty(clientId)) {
-			return null;
-		}
-		try {
-			IGtPush push = new IGtPush(appKey, masterSecret, true);
-			push.connect();
 
-			SingleMessage message = new SingleMessage();
-			message.setData(geTemplate(appId, appKey, po));
-			message.setOffline(true);
-			// 离线有效时间，单位为毫秒，可选
-			message.setOfflineExpireTime(24 * 3600 * 1000);
-			// 可选，1为wifi，0为不限制网络环境。根据手机处于的网络情况，决定是否下发
-			message.setPushNetWorkType(0);
-			//
-			Target target = new Target();
-			target.setAppId(appId);
-			target.setClientId(clientId);
-			IPushResult ret = push.pushMessageToSingle(message, target);
-			return ret;
-		} catch (IOException e) {
-			e.printStackTrace();
+		IGtPush push = new IGtPush(appKey, masterSecret, true);
+		push.connect();
+
+		SingleMessage message = new SingleMessage();
+		message.setData(geTemplate(appId, appKey, po));
+		message.setOffline(true);
+		// 离线有效时间，单位为毫秒，可选
+		message.setOfflineExpireTime(24 * 3600000);// 1天
+		// 可选，1为wifi，0为不限制网络环境。根据手机处于的网络情况，决定是否下发
+		message.setPushNetWorkType(0);
+		//
+		Target target = new Target();
+		target.setAppId(appId);
+		target.setClientId(clientId);
+		IPushResult ret = null;
+		try {
+			ret = push.pushMessageToSingle(message, target);
+		} catch (RequestException e) {
+			ret = push.pushMessageToSingle(message, target, e.getRequestId());
 		}
-		return null;
+		return ret;
 	}
 
-	public IPushResult boardcast(GetuiPushPO po) {
+	/**
+	 * 广播
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日下午12:00:41
+	 *
+	 * @param po
+	 * @return
+	 * @throws IOException
+	 */
+	public IPushResult boardcast(GetuiPushPO po) throws IOException {
 		String appKey = getuiConfig.getAppKey();
 		String appId = getuiConfig.getAppId();
 		String masterSecret = getuiConfig.getMasterSecret();
-		try {
-			IGtPush push = new IGtPush(appKey, masterSecret, true);
-			push.connect();
-			// 定义"AppMessage"类型消息对象，设置消息内容模板、发送的目标App列表、是否支持离线发送、以及离线消息有效期(单位毫秒)
-			AppMessage message = new AppMessage();
-			message.setData(geTemplate(appId, appKey, po));
-			message.setAppIdList(Arrays.asList(appId));
-			message.setOffline(true);
-			// 离线有效时间，单位为毫秒，可选
-			message.setOfflineExpireTime(24 * 3600 * 1000);
-			// 可选，1为wifi，0为不限制网络环境。根据手机处于的网络情况，决定是否下发
-			message.setPushNetWorkType(0);
-			IPushResult ret = push.pushMessageToApp(message);
-			logger.info("Getui pushResult："+ret.getResponse().toString());
-			return ret;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
+		IGtPush push = new IGtPush(appKey, masterSecret, true);
+		push.connect();
+		// 定义"AppMessage"类型消息对象，设置消息内容模板、发送的目标App列表、是否支持离线发送、以及离线消息有效期(单位毫秒)
+		AppMessage message = new AppMessage();
+		message.setData(geTemplate(appId, appKey, po));
+		message.setAppIdList(Arrays.asList(appId));
+		message.setOffline(true);
+		// 离线有效时间，单位为毫秒，可选
+		message.setOfflineExpireTime(3600000);// 保存1小时
+		// 可选，1为wifi，0为不限制网络环境。根据手机处于的网络情况，决定是否下发
+		message.setPushNetWorkType(0);
+		IPushResult ret = push.pushMessageToApp(message);
+		logger.info("Getui pushResult：" + ret.getResponse().toString());
+		return ret;
 	}
 
+	/**
+	 * 获得模板
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日上午11:56:01
+	 *
+	 * @param appId
+	 * @param appKey
+	 * @param po
+	 * @return
+	 */
 	private ITemplate geTemplate(String appId, String appKey, GetuiPushPO po) {
-		// 定义"点击链接打开通知模板"，并设置标题、内容、链接
-		TransmissionTemplate template = new TransmissionTemplate();
-		template.setAppId(appId);
-		template.setAppkey(appKey);
+		if (po.isSilence()) {// 静默
+			return getSilenceTemplate(appId, appKey, po);
+		}
+		return getNotifyTransmissionTemplate(appId, appKey, po);
+	}
 
+	/**
+	 * 获得透传模板,透传的时候需要有通知
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日上午11:56:15
+	 *
+	 * @param appId
+	 * @param appKey
+	 * @param po
+	 * @return
+	 */
+	private ITemplate getNotifyTransmissionTemplate(String appId, String appKey, GetuiPushPO po) {
 		Map<String, String> content = po.getContent();
-		template.setTransmissionContent(JSONObject.toJSONString(content));
-
+		// 设置apn
 		APNPayload payload = new APNPayload();
 		DictionaryAlertMsg dictionaryAlertMsg = new APNPayload.DictionaryAlertMsg();
-		// dictionaryAlertMsg.setTitle(po.getTitle());
+		// dictionaryAlertMsg.setTitle(po.getTitle());//ios不显示标题
 		dictionaryAlertMsg.setBody(po.getText());
 		payload.setAlertMsg(dictionaryAlertMsg);
-
+		// 添加自定义数据
 		Set<String> keySet = content.keySet();
 		for (String key : keySet) {
 			payload.addCustomMsg(key, content.get(key));
 		}
+
+		TransmissionTemplate template = new TransmissionTemplate();
+		template.setAppId(appId);
+		template.setAppkey(appKey);
 		template.setAPNInfo(payload);
+		// 设置透传消息
+		template.setTransmissionType(2);
+		// android 根据这两个字段来判断是否要显示通知
+		content.put("n_title", po.getTitle());
+		content.put("n_text", po.getText());
+		template.setTransmissionContent(JSONObject.toJSONString(content));
+		return template;
+	}
+
+	/**
+	 * 获得透传模板,透传的时候需要静默
+	 * 
+	 * @description
+	 * @author zengguangwei
+	 * @version 2017年2月17日下午12:00:24
+	 *
+	 * @param appId
+	 * @param appKey
+	 * @param po
+	 * @return
+	 */
+	private ITemplate getSilenceTemplate(String appId, String appKey, GetuiPushPO po) {
+		Map<String, String> content = po.getContent();
+
+		APNPayload payload = new APNPayload();
+		payload.setSound("com.gexin.ios.silence");// 静默通知
+		AlertMsg alertMsg = new APNPayload.SimpleAlertMsg("");// 静默通知
+		payload.setAlertMsg(alertMsg);
+		payload.setContentAvailable(1);
+		// 添加自定义数据
+		Set<String> keySet = content.keySet();
+		for (String key : keySet) {
+			payload.addCustomMsg(key, content.get(key));
+		}
+		TransmissionTemplate template = new TransmissionTemplate();
+		template.setAppId(appId);
+		template.setAppkey(appKey);
+		template.setAPNInfo(payload);
+		// 设置透传消息
+		template.setTransmissionType(2);
+		template.setTransmissionContent(JSONObject.toJSONString(po.getContent()));
 		return template;
 	}
 

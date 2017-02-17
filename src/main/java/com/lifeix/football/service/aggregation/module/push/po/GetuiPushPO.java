@@ -13,8 +13,8 @@ public class GetuiPushPO {
 	 * 状态
 	 */
 	public static final String STATUS_CREATE = "create";
-	public static final String STATUS_PENDING = "pending";
-	public static final String STATUS_DONE = "done";
+	public static final String STATUS_FAIL = "fail";
+	public static final String STATUS_SUCC = "done";
 
 	@Id
 	private String id;
@@ -22,9 +22,11 @@ public class GetuiPushPO {
 	private String status = STATUS_CREATE;
 	// 消息类型，boardcast
 	private String type;
-	//
+	//静默通知
+	private boolean silence = false;
+	//设备：ios,android
 	private String device;
-	
+	//getui生成的id
 	private String clientId;
 	// 标题
 	private String title;
@@ -135,6 +137,14 @@ public class GetuiPushPO {
 
 	public void setFailReason(String failReason) {
 		this.failReason = failReason;
+	}
+
+	public boolean isSilence() {
+		return silence;
+	}
+
+	public void setSilence(boolean silence) {
+		this.silence = silence;
 	}
 
 }
