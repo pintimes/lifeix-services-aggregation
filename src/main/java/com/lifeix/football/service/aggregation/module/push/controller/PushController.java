@@ -84,23 +84,16 @@ public class PushController {
 	@RequestMapping(value = "/single", method = RequestMethod.POST)
 	public void pushSingle(//
 			@RequestParam(value = "platform", required = true) String platform, // platform
-			@RequestParam(value = "deviceToken", required = false) String deviceToken, //
-			@RequestParam(value = "clientId", required = false) String clientId, //
+			@RequestParam(value = "deviceToken", required = true) String deviceToken, //
 			@RequestParam(value = "title", required = true) String title, //
 			@RequestParam(value = "text", required = true) String text, //
 			@RequestParam(value = "custom", required = true) String custom, //
 			@RequestParam(value = "description", required = true) String description) throws Exception {
 		Long start_time = null;
 		UmengMsg msg = toMsg(PushConst.TYPE_SINGLE, platform, deviceToken, title, text, custom, description, start_time);
-		if (!StringUtils.isEmpty(deviceToken)) {
-			umengPushService.push(msg);
-		}
-		if (!StringUtils.isEmpty(clientId)) {
-			GetuiMsg getuiMsg = toGetuiMsg(msg);
-			getuiMsg.setClientId(clientId);
-			getuiPushService.push(getuiMsg);
-		}
+		umengPushService.push(msg);
 	}
+	
 	
 	private GetuiMsg toGetuiMsg(UmengMsg msg){
 		GetuiMsg getuiMsg = AdapterUtil.toT(msg, GetuiMsg.class);

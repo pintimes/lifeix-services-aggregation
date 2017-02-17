@@ -51,19 +51,20 @@ public class PushTest {
 
 			// boardcast
 			String description = "测试广播" + System.currentTimeMillis();
-			push("http://localhost:8080", "boardcast", null, title, text, description, custom, null, null);
+			push("http://localhost:8080/football/push/", "boardcast", null, title, text, description, custom, null, null);
 			// pushToUmeng
 			description = "测试pushToUmeng" + System.currentTimeMillis();
 			String deviceToken = "82f4b66510434acb6e026a8ab0c825768bb2ea64a00358ab2be78f498c84af6a";
-			push("http://localhost:8080", "single", "ios", title, text, description, custom, deviceToken, null);
+			push("http://localhost:8080/football/push/", "single", "ios", title, text, description, custom, deviceToken, null);
 			// pushToGetui ios
 			description = "测试pushToGetui ios" + System.currentTimeMillis();
-			String clientId = "b531fad5462df66b0d91e2ea91b3e3f9";
-			push("http://localhost:8080", "single", null, title, text, description, custom, null, clientId);
+			String clientId =GetuiPushServiceTest.CLIENTID_IOS;
+			push("http://localhost:8080/football/push/getui/", "single", null, title, text, description, custom, null, clientId);
+
 			// pushToGetui android
 			description = "测试pushToGetui android" + System.currentTimeMillis();
-			clientId = "8de881563d10fae47e7ce0449547b7dc";
-			push("http://localhost:8080", "single", null, title, text, description, custom, null, clientId);
+			clientId = GetuiPushServiceTest.CLIENTID_ANDROID;
+			push("http://localhost:8080/football/push/getui/", "single", null, title, text, description, custom, null, clientId);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -80,7 +81,7 @@ public class PushTest {
 		map.put("platform", platform);
 		map.put("deviceToken", deviceToken);
 		map.put("clientId", clientId);
-		String sendPost = HttpUtil.sendPost(host + "/football/push/" + type, map);
+		String sendPost = HttpUtil.sendPost(host + type, map);
 		System.out.println(sendPost);
 	}
 
