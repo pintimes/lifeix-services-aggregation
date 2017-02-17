@@ -12,10 +12,15 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
+import com.alibaba.fastjson.JSONObject;
 import com.gexin.rp.sdk.base.IPushResult;
 import com.lifeix.football.service.aggregation.Application;
+import com.lifeix.football.service.aggregation.module.push.UmengConfig;
+import com.lifeix.football.service.aggregation.module.push.model.UmengMsg;
 import com.lifeix.football.service.aggregation.module.push.po.GetuiPushPO;
 import com.lifeix.football.service.aggregation.module.push.service.GetuiPushService;
+import com.lifeix.football.service.aggregation.module.push.service.UmengPushService;
+import com.lifeix.football.service.aggregation.module.push.util.PushConst;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
@@ -28,11 +33,39 @@ public class GetuiPushServiceTest {
 
 	@Autowired
 	private GetuiPushService getuiPushService;
+	
+	@Autowired
+	private UmengPushService umengPushService;
+	
+	@Test
+	public void pushUmeng() {
+		String platform = null;
+		String type = PushConst.TYPE_BOARDCAST;
+		String description = String.valueOf(System.currentTimeMillis());
+		String title = "hello title";
+		String text = "hell text";
+		Map<String, String> custom = new HashMap<>();
+		custom.put("key", "1");
+		try {
+			UmengMsg msg = new UmengMsg();
+			msg.setCustom(custom);
+			msg.setDescription(description);
+			msg.setPlatform(platform);
+			msg.setText(text);
+			msg.setTitle(title);
+			msg.setType(type);
+			umengPushService.push(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	@Test
 	public void testTemp() throws IOException {
 		long num = System.currentTimeMillis();
 		System.out.println(num);
+		
+		
 
 		GetuiPushPO po = null;
 		//

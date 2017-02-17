@@ -5,7 +5,7 @@ public class PushConst {
 	/**
 	 * 消息类型
 	 */
-	public static final String TYPE_BOARDCAST = "boardcast";
+	public static final String TYPE_BOARDCAST = "broadcast";
 	public static final String TYPE_SINGLE = "single";
 	public static final String TYPE_LISTCAST = "listcast";
 	/**

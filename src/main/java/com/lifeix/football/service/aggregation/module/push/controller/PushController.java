@@ -38,7 +38,7 @@ public class PushController {
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/boardcast", method = RequestMethod.POST)
-	public void boardcast(//
+	public void broadcast(//
 			@RequestParam(value = "title", required = true) String title, //
 			@RequestParam(value = "text", required = true) String text, //
 			@RequestParam(value = "custom", required = true) String custom, //
