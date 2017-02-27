@@ -263,7 +263,7 @@ public class GetuiPushService {
 		// 设置apn
 		APNPayload payload = new APNPayload();
 		DictionaryAlertMsg dictionaryAlertMsg = new APNPayload.DictionaryAlertMsg();
-		// dictionaryAlertMsg.setTitle(po.getTitle());//ios不显示标题
+		dictionaryAlertMsg.setTitle(po.getTitle());//ios不显示标题
 		dictionaryAlertMsg.setBody(po.getText());
 		payload.setAlertMsg(dictionaryAlertMsg);
 		// 添加自定义数据
