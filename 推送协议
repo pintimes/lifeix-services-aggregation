@@ -1,0 +1,12 @@
+你来判推送
+
+0.找到数据
+在decision系统中找roudId,categoryId对应的是subjectId
+
+1.先往自己的手机推送
+curl -X POST -H "Content-Type: application/x-www-form-urlencoded"  -d 'clientId=eb0f838bf494669b22d2645840bab1ff&title=2017中超首轮判例出炉&text=2017中超首轮判例出炉！国安恒大首球越位、上港长春热点判罚、中国足球网邀你来判>>点击参与&custom={"type":"4"%2C"categoryId":"ds_6"%2C"roundId":"dr_16"}&description=2017中超首轮判例出炉！国安恒大首球越位、上港长春热点判罚、中国足球网邀你来判>>点击参与' "http://localhost:8080/football/push/getui/single"
+
+2.删除数据库中的推送记录
+
+3.广播
+curl -X POST http://127.0.0.1:8080/football/push/boardcast   -H 'content-type: application/x-www-form-urlencoded'   -d 'title=中超第4轮你来判出炉!&text=广州德比陈志钊是否该驱逐？赛场队员受伤是否该吹停？邀你来判！&description=广州德比陈志钊是否该驱逐？赛场队员受伤是否该吹停？邀你来判！&custom={"type":"4","categoryId":"ds_6","roundId":"dr_17"}'
