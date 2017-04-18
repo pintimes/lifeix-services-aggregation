@@ -30,11 +30,11 @@ public class ImageController {
 	 * @throws
 	 */
     @RequestMapping(value = "/compress", method = RequestMethod.PUT)
-    public void imageCompress(@RequestParam(name = "file_key", required = true) String fileKey,
+    public String imageCompress(@RequestParam(name = "file_key", required = true) String fileKey,
     		@RequestParam(name = "limit", required = false, defaultValue="150k") String limit,
     		@RequestParam(name = "width", required = false) String width,
     		@RequestParam(name = "height", required = false) String height) throws Exception {
-    	imageService.imageCompress(fileKey,limit,width,height);
+        return imageService.imageCompress(fileKey,limit,width,height);
     }
 
 }

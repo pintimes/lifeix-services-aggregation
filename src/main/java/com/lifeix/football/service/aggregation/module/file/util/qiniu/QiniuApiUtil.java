@@ -272,7 +272,7 @@ public class QiniuApiUtil implements InitializingBean {
      * @name imageCompress @description 图片压缩 @author xule @version 2016年9月18日
      *       下午5:53:16 @param @return void @throws
      */
-    public void imageCompress(String key, String limit, String width, String height) throws Exception {
+    public String imageCompress(String key, String limit, String width, String height) throws Exception {
 	LOG.info("图片压缩,imgUrl=https://resources.c-f.com/" + key);
 	Auth auth = Auth.create(qiniuConfig.getAccessKey(), qiniuConfig.getSecretKey());
 	// 新建一个OperationManager对象
@@ -285,6 +285,8 @@ public class QiniuApiUtil implements InitializingBean {
 	        qiniuConfig.getTransformPipeline());
 	try {
 	    String persistid = operater.pfop(qiniuConfig.getBucketName(), key, pfops, params);
+	    System.out.println("图片压缩成功,imgUrl=https://resources.c-f.com/" + key+",persistid="+persistid);
+            return persistid;
 	    // 打印返回的persistid
 	} catch (QiniuException e) {
 	    // 捕获异常信息

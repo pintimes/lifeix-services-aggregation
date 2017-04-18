@@ -13,15 +13,5 @@ public interface ImageService {
 	 * @return void
 	 * @throws
 	 */
-    public void imageCompress(String key, String limit, String width, String height) throws Exception;
-
-	/**
-	 * @name imageCompress
-	 * @description
-	 * @author xule
-	 * @version 2016年9月20日 下午5:00:14
-	 * @param 
-	 * @return void
-	 * @throws 
-	 */
+    public String imageCompress(String key, String limit, String width, String height) throws Exception;
 }

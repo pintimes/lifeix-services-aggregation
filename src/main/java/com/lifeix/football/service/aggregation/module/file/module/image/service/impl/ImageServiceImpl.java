@@ -29,11 +29,11 @@ public class ImageServiceImpl implements ImageService {
 	 * @return void
 	 * @throws
 	 */
-    public void imageCompress(String key, String limit, String width, String height) throws Exception {
+    public String imageCompress(String key, String limit, String width, String height) throws Exception {
     	// 参数校验
     	if (key == null)
     		throw new IllegalparamException("key must have data.");
-    	qiniuApiUtil.imageCompress(key,limit,width,height);
+    	return qiniuApiUtil.imageCompress(key,limit,width,height);
     }
 
 }
