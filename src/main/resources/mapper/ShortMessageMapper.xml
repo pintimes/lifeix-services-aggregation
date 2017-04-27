@@ -6,7 +6,7 @@
 
 	<sql id="TAB_NAME">short_message</sql>
 
-	<select id="getUnsendedShortMessages" resultType="com.lifeix.football.sender.module.sms.po.ShortMessagePO" >
+	<select id="getUnsendedShortMessages" resultType="com.lifeix.football.service.aggregation.module.sender.module.sms.po.ShortMessagePO" >
 		SELECT 
 		id,  
 		signName,

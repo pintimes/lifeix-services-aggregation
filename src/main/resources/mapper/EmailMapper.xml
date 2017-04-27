@@ -6,7 +6,7 @@
 
 	<sql id="TAB_NAME">email</sql>
 
-	<select id="getUnsendedEmais" resultType="com.lifeix.football.sender.module.email.po.EmailPO" >
+	<select id="getUnsendedEmais" resultType="com.lifeix.football.service.aggregation.module.sender.module.email.po.EmailPO" >
 		SELECT 
 		id,  
 		fromAddress,
